@@ -1,0 +1,41 @@
+name: CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  HUSKY: 0
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint & build
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'push' ||
+      !contains(github.event.head_commit.message || '', '[skip ci]')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Biome (lint & format)
+        run: bun run lint
+
+      - name: Production build
+        run: bun run build
