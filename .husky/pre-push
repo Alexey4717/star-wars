@@ -1,0 +1,12 @@
+zero="0000000000000000000000000000000000000000"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+	[ -z "$local_sha" ] && continue
+	[ "$local_sha" = "$zero" ] && continue
+
+	if [ "$remote_sha" = "$zero" ]; then
+		remote_sha="$(git rev-parse "origin/${remote_ref#refs/heads/}" 2>/dev/null || git rev-parse origin/main 2>/dev/null || true)"
+	fi
+
+	[ -n "$remote_sha" ] && bunx biome check --changed --since="$remote_sha" --no-errors-on-unmatched
+done
