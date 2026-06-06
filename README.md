@@ -29,6 +29,7 @@ bun run dev
 |---|---|
 | `bun run dev` | Запускает dev-сервер Vite с HMR |
 | `bun run build` | Проверяет типы (`tsc -b`) и собирает production-бандл в `build/` |
+| `bun run check:generated` | Проверяет артефакты кодогенераций, например что `routeTree.gen.ts` совпадает с актуальным деревом маршрутов (запускать **после** `build`) |
 | `bun run preview` | Локальный просмотр production-сборки |
 | `bun run lint` | Проверка кода Biome (линт + формат) |
 | `bun run lint:fix` | Автоисправление замечаний Biome |
@@ -270,7 +271,7 @@ export const NAV_ITEMS = [
 
 Пункт меню ссылается на объект `Route`, а не на строку — путь берётся из `route.to` и типизируется автоматически.
 
-**4. Проверка** — после сохранения файлов Vite-плагин перегенерирует `routeTree.gen.ts`. Запустите `bun run dev` или `bun run build`.
+**4. Проверка** — после сохранения файлов Vite-плагин перегенерирует `routeTree.gen.ts`. Запустите `bun run dev` или `bun run build`, затем закоммитьте обновлённый `routeTree.gen.ts`. Локально можно проверить актуальность: `bun run build && bun run check:generated`.
 
 ### Добавить только list-страницу (без detail)
 
@@ -294,7 +295,7 @@ export const NAV_ITEMS = [
 2. Удалить page-компоненты: `src/pages/{entity}/`
 3. Убрать запись из `NAV_ITEMS` и union `NavListRouteTo` в `navigation.tsx`
 4. Убедиться, что нет импортов удалённых страниц в других файлах
-5. `bun run build` — проверить, что `routeTree.gen.ts` пересобрался без удалённых маршрутов
+5. `bun run build` — пересобрать `routeTree.gen.ts` и закоммитить изменения; `bun run check:generated` должен завершиться без diff
 
 ### Pending и error UI
 
@@ -308,7 +309,7 @@ export const NAV_ITEMS = [
 ### Типизация
 
 - [`src/global/tanstack-router.d.ts`](src/global/tanstack-router.d.ts) — augmentation `Register` для типобезопасных `Link`, `useNavigate`, `useParams`
-- `routeTree.gen.ts` — типы путей (`FileRouteTypes['to']`); файл генерируется автоматически, в Biome исключён из проверки
+- `routeTree.gen.ts` — типы путей (`FileRouteTypes['to']`); файл генерируется автоматически при `dev`/`build`, в Biome исключён из проверки. В CI после сборки запускается `check:generated`: если маршруты менялись, а файл не закоммичен — пайплайн упадёт
 - `tsconfig.app.json` — `"strict": true` (обязательно для TanStack Router)
 
 ### Ссылки по роутингу
@@ -355,6 +356,7 @@ export const NAV_ITEMS = [
 1. `bun install --frozen-lockfile`
 2. `bun run lint`
 3. `bun run build`
+4. `bun run check:generated` — `routeTree.gen.ts` должен совпадать с результатом сборки
 
 **Release** (на push в `main`):
 

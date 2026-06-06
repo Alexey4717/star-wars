@@ -39,3 +39,6 @@ jobs:
 
       - name: Production build
         run: bun run build
+
+      - name: Generated artifacts are up to date
+        run: bun run check:generated
