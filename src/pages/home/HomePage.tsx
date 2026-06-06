@@ -1,3 +1,3 @@
-export function HomePage() {
-  return <div>home page</div>;
-}
+import { Page } from '@/common/ui/Page/Page';
+
+export const HomePage = () => <Page title="Главная">Добро пожаловать в SWAPI Explorer</Page>;

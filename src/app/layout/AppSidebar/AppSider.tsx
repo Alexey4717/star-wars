@@ -12,7 +12,7 @@ interface AppSiderProps {
   width?: number;
 }
 
-export function AppSider({ collapsed = false, onCollapse, width = 240 }: AppSiderProps) {
+export const AppSider = ({ collapsed = false, onCollapse, width = 240 }: AppSiderProps) => {
   const { styles } = useAppSiderStyles();
 
   return (
@@ -26,12 +26,12 @@ export function AppSider({ collapsed = false, onCollapse, width = 240 }: AppSide
       collapsedWidth={64}
       trigger={null}
     >
-      <div className={styles.inner}>
+      <nav aria-label="Основная навигация" className={styles.inner}>
         <MainMenu collapsed={collapsed} onCollapse={onCollapse} />
         <div className={styles.footer}>
           <ThemeToggle />
         </div>
-      </div>
+      </nav>
     </Sider>
   );
-}
+};

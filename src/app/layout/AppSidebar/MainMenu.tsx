@@ -1,15 +1,14 @@
 import { useCallback, useMemo } from 'react';
 
 import { MenuFoldOutlined, MenuUnfoldOutlined, StarFilled } from '@ant-design/icons';
+import { useRouter, useRouterState } from '@tanstack/react-router';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
-import { useLocation, useNavigate } from 'react-router-dom';
 
+import { HomeRoute, NAV_ITEMS, resolveNavPath } from '../../router/navigation';
 import { useAppSiderStyles } from './appSider.styles';
-import { navItems } from './navItems';
 
 const SIDER_TOGGLE_KEY = 'sider-toggle';
-const HOME_NAV_KEY = '/';
 
 interface MainMenuProps {
   collapsed?: boolean;
@@ -18,18 +17,10 @@ interface MainMenuProps {
 
 export const MainMenu = ({ collapsed = false, onCollapse }: MainMenuProps) => {
   const { styles } = useAppSiderStyles();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const selectedKey = useMemo(() => {
-    if (pathname === HOME_NAV_KEY) {
-      return [HOME_NAV_KEY];
-    }
-
-    const matchedItem = navItems.find((item) => item && 'key' in item && item.key === pathname);
-
-    return matchedItem ? [String(matchedItem.key)] : [HOME_NAV_KEY];
-  }, [pathname]);
+  const selectedKey = useMemo(() => resolveNavPath(pathname), [pathname]);
 
   const menuItems = useMemo<MenuProps['items']>(() => {
     const items: MenuProps['items'] = [];
@@ -44,7 +35,7 @@ export const MainMenu = ({ collapsed = false, onCollapse }: MainMenuProps) => {
     }
 
     items.push({
-      key: HOME_NAV_KEY,
+      key: HomeRoute.to,
       icon: <StarFilled className={styles.homeIcon} />,
       label: collapsed ? (
         'Главная'
@@ -57,27 +48,34 @@ export const MainMenu = ({ collapsed = false, onCollapse }: MainMenuProps) => {
     });
 
     items.push({ type: 'divider' });
-    items.push(...navItems);
+
+    items.push(
+      ...NAV_ITEMS.map((item) => ({
+        key: item.route.to,
+        icon: item.icon,
+        label: item.label,
+      })),
+    );
 
     return items;
   }, [collapsed, onCollapse, styles]);
 
   const handleMenuClick: MenuProps['onClick'] = useCallback(
-    ({ key }) => {
+    ({ key }: { key: string }) => {
       if (key === SIDER_TOGGLE_KEY) {
         return;
       }
 
-      navigate(String(key));
+      router.navigate({ to: key });
     },
-    [navigate],
+    [router],
   );
 
   return (
     <Menu
       className={styles.menu}
       mode="inline"
-      selectedKeys={selectedKey}
+      selectedKeys={[selectedKey]}
       items={menuItems}
       onClick={handleMenuClick}
     />

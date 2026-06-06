@@ -10,7 +10,7 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export const AppLayout = ({ children }: AppLayoutProps) => {
   const { styles } = useAppLayoutStyles();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -24,4 +24,4 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}
     </Layout>
   );
-}
+};

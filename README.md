@@ -10,6 +10,7 @@ Pet-проект на React: каталог и информация о всел�
 | [TypeScript 6](https://www.typescriptlang.org/) | типизация |
 | [Vite 8](https://vite.dev/) | сборка и dev-сервер |
 | [Ant Design 6](https://ant.design/) | UI-компоненты |
+| [TanStack Router](https://tanstack.com/router/latest) | типизированный роутинг (file-based) |
 | [Biome](https://biomejs.dev/) | линтинг и форматирование |
 | [Bun](https://bun.sh/) | пакетный менеджер и рантайм |
 
@@ -55,6 +56,7 @@ bun run dev
 
 | Плагин | Назначение |
 |---|---|
+| `@tanstack/router-plugin` | file-based роутинг, генерация `routeTree.gen.ts`, code splitting |
 | `@vitejs/plugin-react` | JSX/TSX, Fast Refresh |
 | `vite-plugin-svgr` | импорт SVG как React-компонентов |
 | `vite-plugin-checker` | проверка TypeScript в dev-режиме с оверлеем ошибок (отключён при `build`) |
@@ -160,16 +162,170 @@ import { HomePage } from '@/pages/home';
 
 Порядок импортов в Biome уже настроен под слои FEOD (`global` → `common` → `modules` → `pages` → `app`).
 
+## Роутинг
+
+Роутинг построен на **[TanStack Router](https://tanstack.com/router/latest)** с **file-based routing**: файлы в `src/app/router/routes/` автоматически превращаются в дерево маршрутов (генерируется `src/app/router/routeTree.gen.ts`).
+
+Роутинг разделён на два слоя по FEOD:
+
+| Слой | Папка | Ответственность |
+|---|---|---|
+| **App** | `src/app/router/routes/` | тонкие route-адаптеры: `createFileRoute`, pending/error, передача params |
+| **Pages** | `src/pages/{entity}/` | UI страниц, без привязки к роутеру |
+
+```
+src/app/router/
+├── router.ts              # createRouter
+├── routeTree.gen.ts       # автогенерация (не редактировать вручную)
+├── navigation.tsx         # конфиг sidenav
+└── routes/
+    ├── __root.tsx         # AppProviders + Outlet
+    ├── _layout.tsx        # pathless layout: AppLayout + Outlet
+    └── _layout/
+        ├── index.tsx      # /
+        ├── films/
+        │   ├── index.tsx  # /films
+        │   └── $filmId.tsx # /films/:filmId
+        └── ...
+```
+
+Pathless layout `_layout` оборачивает все страницы в shell приложения (sidebar + content). URL остаётся «чистым»: `/films`, а не `/_layout/films`.
+
+### Добавить новый раздел (list + detail)
+
+Пример — раздел **droids** с маршрутами `/droids` и `/droids/:droidId`.
+
+**1. Страницы** (`src/pages/droids/`):
+
+```tsx
+// DroidsPage.tsx
+export const DroidsPage = () => <Page title="Дроиды">...</Page>;
+
+// DroidDetailPage.tsx
+interface DroidDetailPageProps {
+  droidId: string;
+}
+
+export const DroidDetailPage = ({ droidId }: DroidDetailPageProps) => (
+  <Page title={`Дроид ${droidId}`}>...</Page>
+);
+```
+
+**2. Route-файлы** (`src/app/router/routes/_layout/droids/`):
+
+```tsx
+// index.tsx — список
+import { createFileRoute } from '@tanstack/react-router';
+
+import { createRouteError } from '@/common/ui/ErrorBoundary/ErrorBoundary';
+import { createRoutePending } from '@/common/ui/RoutePending/RoutePending';
+
+import { DroidsPage } from '@/pages/droids/DroidsPage';
+
+export const Route = createFileRoute('/_layout/droids/')({
+  component: DroidsPage,
+  pendingComponent: createRoutePending('дроидов'),
+  errorComponent: createRouteError('дроиды'),
+});
+```
+
+```tsx
+// $droidId.tsx — детальная страница
+import { createFileRoute } from '@tanstack/react-router';
+
+import { createRouteError } from '@/common/ui/ErrorBoundary/ErrorBoundary';
+import { createRoutePending } from '@/common/ui/RoutePending/RoutePending';
+
+import { DroidDetailPage } from '@/pages/droids/DroidDetailPage';
+
+export const Route = createFileRoute('/_layout/droids/$droidId')({
+  component: () => {
+    const { droidId } = Route.useParams();
+    return <DroidDetailPage droidId={droidId} />;
+  },
+  pendingComponent: createRoutePending('дроида'),
+  errorComponent: createRouteError('дроид', { notFoundTitle: 'Дроид не найден' }),
+});
+```
+
+Params читаются **только в route-адаптере** через `Route.useParams()` — так TypeScript проверяет имена параметров. Page получает их через props и не импортирует роутер.
+
+**3. Sidenav** — [`src/app/router/navigation.tsx`](src/app/router/navigation.tsx):
+
+```tsx
+import { Route as DroidsRoute } from './routes/_layout/droids/index';
+
+// добавить в union NavListRouteTo:
+// | '/droids'
+
+export const NAV_ITEMS = [
+  // ...
+  {
+    route: DroidsRoute,
+    label: 'Дроиды',
+    icon: <AndroidOutlined />,
+  },
+] as const satisfies readonly NavItem<{ readonly to: NavListRouteTo }>[];
+```
+
+Пункт меню ссылается на объект `Route`, а не на строку — путь берётся из `route.to` и типизируется автоматически.
+
+**4. Проверка** — после сохранения файлов Vite-плагин перегенерирует `routeTree.gen.ts`. Запустите `bun run dev` или `bun run build`.
+
+### Добавить только list-страницу (без detail)
+
+Достаточно шагов 1–2 с одним `index.tsx` (как `/transports`). Detail-файл `$id.tsx` не создавать.
+
+### Изменить существующий роут
+
+| Задача | Что менять |
+|---|---|
+| Переименовать URL | файлы/папки в `routes/_layout/`, path в `createFileRoute(...)`, page-компонент |
+| Переименовать param | `$filmId.tsx` → `$id.tsx`, props в Page, `Route.useParams()` в адаптере |
+| Сменить UI | `src/pages/...` — route-файл можно не трогать |
+| Текст загрузки / ошибки | `createRoutePending('...')`, `createRouteError('...')` в route-файле |
+| Пункт sidenav | `navigation.tsx`: label, icon, `route` |
+
+После переименования route-файлов плагин обновит `routeTree.gen.ts`. TypeScript подскажет места, где сломалась типизация (navigation, navigate, Link).
+
+### Удалить роут
+
+1. Удалить папку route-файлов: `src/app/router/routes/_layout/{entity}/`
+2. Удалить page-компоненты: `src/pages/{entity}/`
+3. Убрать запись из `NAV_ITEMS` и union `NavListRouteTo` в `navigation.tsx`
+4. Убедиться, что нет импортов удалённых страниц в других файлах
+5. `bun run build` — проверить, что `routeTree.gen.ts` пересобрался без удалённых маршрутов
+
+### Pending и error UI
+
+В route-файлах используются фабрики из Common:
+
+- `createRoutePending('фильмов')` → «Загрузка фильмов...»
+- `createRouteError('фильм', { notFoundTitle: 'Фильм не найден' })` → `404` при `notFound()` в loader, иначе `error`
+
+Глобальный fallback — `defaultErrorComponent` в [`src/app/router/router.ts`](src/app/router/router.ts).
+
+### Типизация
+
+- [`src/global/tanstack-router.d.ts`](src/global/tanstack-router.d.ts) — augmentation `Register` для типобезопасных `Link`, `useNavigate`, `useParams`
+- `routeTree.gen.ts` — типы путей (`FileRouteTypes['to']`); файл генерируется автоматически, в Biome исключён из проверки
+- `tsconfig.app.json` — `"strict": true` (обязательно для TanStack Router)
+
+### Ссылки по роутингу
+
+- [TanStack Router — File-Based Routing](https://tanstack.com/router/latest/docs/framework/react/routing/file-based-routing)
+- [TanStack Router — Code Splitting](https://tanstack.com/router/latest/docs/framework/react/guide/code-splitting)
+
 ## Текущее состояние кодовой базы
 
-Сейчас реализован минимальный каркас:
+Реализован каркас приложения:
 
-- `src/main.tsx` — монтирование React-приложения
-- `src/App.tsx` — заглушка главного экрана
-- `src/index.css` — базовые CSS-переменные и стили
-- подключены Ant Design reset-стили и иконки
+- **App** — layout (desktop/mobile), sidebar, theme toggle, TanStack Router, провайдеры
+- **Pages** — заглушки для всех SWAPI-сущностей (films, characters, planets и др.)
+- **Common** — `Page`, `RoutePending`, `ErrorBoundary`
+- **Global** — augmentation типов для Ant Design и TanStack Router
 
-Папки FEOD-слоёв (`app/`, `pages/`, `modules/`, `common/`) пока не созданы — структура будет появляться по мере добавления фич. Biome и алиасы уже подготовлены под эту организацию.
+Модули (`modules/`) и интеграция со SWAPI — следующий этап.
 
 ## Инструменты качества
 
@@ -212,7 +368,7 @@ import { HomePage } from '@/pages/home';
 - `tsconfig.app.json` — исходники приложения (`src/`)
 - `tsconfig.node.json` — конфигурация Vite (`vite.config.ts`, `config/`)
 
-Строгие опции: `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
+Строгие опции: `strict`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`.
 
 ## Переменные окружения
 
