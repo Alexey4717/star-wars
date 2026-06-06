@@ -21,6 +21,10 @@ export const buildConfig = (isBuild: boolean): UserConfig['build'] => ({
           { name: 'rc-components', test: /\/node_modules\/rc-[^/]+\// },
           { name: 'dayjs', test: /\/node_modules\/dayjs\// },
           {
+            name: 'mobx',
+            test: /\/node_modules\/(mobx|mobx-react-lite)\//,
+          },
+          {
             name: 'react-vendor',
             test: /\/node_modules\/(react|react-dom|scheduler)\//,
           },

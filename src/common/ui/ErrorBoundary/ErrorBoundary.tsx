@@ -2,6 +2,8 @@ import { type ErrorComponentProps, isNotFound } from '@tanstack/react-router';
 import { Button, Result } from 'antd';
 import type { ResultStatusType } from 'antd/es/result';
 
+import { SwapiHttpError } from '../../api/SwapiHttpError';
+
 interface RouteErrorOptions {
   notFoundTitle?: string;
   status?: ResultStatusType;
@@ -33,6 +35,17 @@ export const RouteError = ({
         status="404"
         title={notFoundTitle ?? 'Запись не найдена'}
         subTitle={typeof error.data === 'string' ? error.data : undefined}
+        extra={<RetryButton reset={reset} />}
+      />
+    );
+  }
+
+  if (error instanceof SwapiHttpError && error.status === 404) {
+    return (
+      <Result
+        status="404"
+        title={notFoundTitle ?? 'Запись не найдена'}
+        subTitle={error.message}
         extra={<RetryButton reset={reset} />}
       />
     );

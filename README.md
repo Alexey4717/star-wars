@@ -11,6 +11,9 @@ Pet-проект на React: каталог и информация о всел�
 | [Vite 8](https://vite.dev/) | сборка и dev-сервер |
 | [Ant Design 6](https://ant.design/) | UI-компоненты |
 | [TanStack Router](https://tanstack.com/router/latest) | типизированный роутинг (file-based) |
+| [MobX 6](https://mobx.js.org/) | реактивное состояние (ViewModel) |
+| [mobx-tanstack-query](https://github.com/js2me/mobx-tanstack-query) | запросы к API из MobX без React-хуков |
+| [@tanstack/query-core](https://tanstack.com/query/latest) | кеш и dedupe серверных данных |
 | [Biome](https://biomejs.dev/) | линтинг и форматирование |
 | [Bun](https://bun.sh/) | пакетный менеджер и рантайм |
 
@@ -88,6 +91,7 @@ Production-сборка:
   - `rc-*` компоненты
   - `dayjs`
   - `react-vendor` (react, react-dom, scheduler)
+  - `mobx` (mobx, mobx-react-lite)
 
 Sourcemap генерируются только вне production-сборки.
 
@@ -124,26 +128,64 @@ src/
 
 ### MVVM внутри модуля
 
-Планируемая структура модуля (пример `modules/characters/`):
+Структура модуля `modules/characters/`:
 
 ```
 modules/characters/
-├── index.ts              # публичный API модуля
+├── index.ts                              # публичный API модуля
 ├── model/
-│   ├── types.ts          # типы домена
-│   └── characters.api.ts # запросы к SWAPI
+│   ├── types.ts                          # типы домена
+│   ├── queryKeys.ts                      # ключи TanStack Query
+│   └── characters.api.ts                 # запросы к серверу
 ├── view-model/
-│   └── characters.vm.ts  # MobX store: состояние, действия, вычисляемые поля
+│   ├── charactersList.vm.ts              # MobX + Query: список
+│   ├── characterDetail.vm.ts             # MobX + Query: детальная
+│   ├── charactersListVm.context.tsx      # Provider + hook
+│   └── characterDetailVm.context.tsx     # Provider + hook
 └── view/
-    ├── CharactersList.tsx
-    └── CharacterCard.tsx
+    ├── CharactersListView.tsx            # только props + UI
+    └── CharacterDetailView.tsx
 ```
 
 - **Model** — чистые данные и сетевой слой, без React.
-- **ViewModel** — MobX-класс или store: загрузка, фильтрация, пагинация, обработка ошибок.
-- **View** — React-компоненты, обёрнутые в `observer`, без бизнес-логики.
+- **ViewModel** — MobX-класс с `Query` из mobx-tanstack-query: загрузка, кеш, ошибки.
+- **View** — React-компоненты без бизнес-логики; получают данные через props.
+- **Page** — shell (`Page`), `VmProvider`, `observer`; при необходимости передаёт `queryClient` из common.
 
-Связь View ↔ ViewModel — через хуки или контекст модуля; View не ходит в API напрямую.
+Связь View ↔ ViewModel — через React Context модуля; View не ходит в API напрямую.
+
+### Data flow (characters)
+
+```
+Route (app) → Page (pages) → VmProvider (modules) → ViewModel + Query → swapiFetch (common) → swapi.online
+                                      ↓
+                              View (props only)
+```
+
+Пример публичного API модуля:
+
+```ts
+import {
+  CharactersListView,
+  CharactersListVmProvider,
+  useCharactersListVm,
+} from '@/modules/characters';
+```
+
+`@tanstack/react-query` и хуки `useQuery` **не используются** — запросы идут из ViewModel через [mobx-tanstack-query](https://github.com/js2me/mobx-tanstack-query).
+
+### Code splitting (MobX + модули)
+
+- Per-module ViewModel: без монолитного root store.
+- ViewModel импортируется только из `pages/` → попадает в route chunk (`autoCodeSplitting: true` в Vite).
+- **Не импортировать** `modules/*` из `main.tsx`, `AppProviders`, layout.
+- `queryClient` singleton живёт в `common/query/queryClient.ts`; Page или ViewModel могут импортировать его из common.
+
+### SWAPI
+
+Источник данных: [swapi.online](https://swapi.online/).
+
+HTTP-клиент: `src/common/api/swapiFetch.ts`.
 
 ### Алиасы путей
 
@@ -321,12 +363,13 @@ export const NAV_ITEMS = [
 
 Реализован каркас приложения:
 
-- **App** — layout (desktop/mobile), sidebar, theme toggle, TanStack Router, провайдеры
-- **Pages** — заглушки для всех SWAPI-сущностей (films, characters, planets и др.)
-- **Common** — `Page`, `RoutePending`, `ErrorBoundary`
+- **App** — layout (desktop/mobile), sidebar, theme toggle, TanStack Router, провайдеры, MobX config, `QueryClient`
+- **Pages** — заглушки для SWAPI-сущностей; **characters** и **characterDetails** загружают данные через MVVM
+- **Modules** — `characters` (Model + ViewModel + View)
+- **Common** — `Page`, `RoutePending`, `ErrorBoundary`, `swapiFetch`
 - **Global** — augmentation типов для Ant Design и TanStack Router
 
-Модули (`modules/`) и интеграция со SWAPI — следующий этап.
+Остальные сущности SWAPI (films, planets, …) — следующий этап.
 
 ## Инструменты качества
 
@@ -381,5 +424,6 @@ export const NAV_ITEMS = [
 ## Полезные ссылки
 
 - [FEOD на Habr](https://habr.com/ru/companies/sportmaster_lab/articles/972410/) — описание архитектурного подхода
-- [SWAPI](https://swapi.dev/) — Star Wars API, планируемый источник данных
-- [MobX](https://mobx.js.org/) — реактивное управление состоянием (будет добавлен в модули)
+- [SWAPI](https://swapi.online/) — Star Wars API (источник данных)
+- [MobX](https://mobx.js.org/) — реактивное управление состоянием
+- [mobx-tanstack-query](https://js2me.github.io/mobx-tanstack-query/) — MobX-обёртка над TanStack Query Core

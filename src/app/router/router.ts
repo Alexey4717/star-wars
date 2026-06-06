@@ -2,12 +2,14 @@ import { createRouter } from '@tanstack/react-router';
 
 import { ErrorBoundary } from '@/common/ui/ErrorBoundary/ErrorBoundary';
 
+import { NotFoundRoute } from './NotFoundRoute';
 import { routeTree } from './routeTree.gen';
 
 export const router = createRouter({
   routeTree,
   context: {},
   defaultErrorComponent: ErrorBoundary,
+  defaultNotFoundComponent: NotFoundRoute,
   defaultPendingMs: 300,
   defaultPendingMinMs: 200,
 });
