@@ -1,42 +1,38 @@
 import { observer } from 'mobx-react-lite';
+import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
-import { queryClient } from '@/common/query/queryClient';
 import { Page } from '@/common/ui/Page/Page';
 
-import {
-  CharacterDetailView,
-  CharacterDetailVmProvider,
-  useCharacterDetailVm,
-} from '@/modules/characters';
+import { CharacterDetailView, CharacterDetailViewModel } from '@/modules/characters';
 
 interface CharacterDetailPageProps {
   characterId: string;
 }
 
-const CharacterDetailPageContent = observer(({ characterId }: CharacterDetailPageProps) => {
-  const viewModel = useCharacterDetailVm();
+const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDetailViewModel>) => {
+  const characterId = String(model.payload.characterId);
 
-  if (viewModel.isLoading) {
+  if (model.isLoading) {
     return <Page title={`Персонаж ${characterId}`}>Загрузка...</Page>;
   }
 
-  if (viewModel.error) {
-    throw viewModel.error;
+  if (model.error) {
+    throw model.error;
   }
 
-  if (!viewModel.character) {
+  if (!model.character) {
     return <Page title={`Персонаж ${characterId}`}>Нет данных</Page>;
   }
 
   return (
     <Page title={`Персонаж ${characterId}`}>
-      <CharacterDetailView character={viewModel.character} />
+      <CharacterDetailView character={model.character} />
     </Page>
   );
 });
 
+const CharacterDetailPageWithVm = withViewModel(CharacterDetailViewModel, CharacterDetailPageView);
+
 export const CharacterDetailPage = ({ characterId }: CharacterDetailPageProps) => (
-  <CharacterDetailVmProvider queryClient={queryClient} characterId={characterId}>
-    <CharacterDetailPageContent characterId={characterId} />
-  </CharacterDetailVmProvider>
+  <CharacterDetailPageWithVm payload={{ characterId: Number(characterId) }} />
 );

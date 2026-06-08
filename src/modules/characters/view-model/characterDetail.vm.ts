@@ -1,18 +1,41 @@
-import type { QueryClient } from 'mobx-tanstack-query';
 import { Query } from 'mobx-tanstack-query';
+import { ViewModelBase } from 'mobx-view-model';
+
+import { queryClient } from '@/common/query/queryClient';
 
 import { fetchCharacterById } from '../model/characters.api';
-import { characterQueryKeys } from '../model/queryKeys';
+import { type CharacterDetailQueryKey, characterQueryKeys } from '../model/queryKeys';
 import type { Character } from '../model/types';
 
-export class CharacterDetailViewModel {
-  private readonly detailQuery;
+type CharacterDetailQuery = Query<Character, Error, Character, Character, CharacterDetailQueryKey>;
 
-  constructor(queryClient: QueryClient, characterId: number) {
-    this.detailQuery = new Query({
+export class CharacterDetailViewModel extends ViewModelBase<{ characterId: number }> {
+  private detailQuery!: CharacterDetailQuery;
+  private queryKey: CharacterDetailQueryKey = characterQueryKeys.detail(this.payload.characterId);
+
+  protected willMount() {
+    this.createDetailQuery(this.payload.characterId);
+  }
+
+  protected willUnmount() {
+    this.detailQuery.destroy();
+  }
+
+  payloadChanged(payload: { characterId: number }, prevPayload: { characterId: number }) {
+    if (payload.characterId === prevPayload.characterId) {
+      return;
+    }
+
+    this.detailQuery.destroy();
+    this.createDetailQuery(payload.characterId);
+  }
+
+  private createDetailQuery(characterId: number) {
+    this.queryKey = characterQueryKeys.detail(characterId);
+    this.detailQuery = new Query<Character, Error, Character, Character, CharacterDetailQueryKey>({
       queryClient,
-      queryKey: characterQueryKeys.detail(characterId),
-      queryFn: () => fetchCharacterById(characterId),
+      queryKey: this.queryKey,
+      queryFn: ({ signal }) => fetchCharacterById(characterId, { signal }),
     });
   }
 

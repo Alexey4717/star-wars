@@ -1,19 +1,40 @@
-import type { QueryClient } from 'mobx-tanstack-query';
 import { Query } from 'mobx-tanstack-query';
+import { ViewModelBase } from 'mobx-view-model';
+
+import { queryClient } from '@/common/query/queryClient';
 
 import { fetchCharacters } from '../model/characters.api';
-import { characterQueryKeys } from '../model/queryKeys';
+import { type CharactersListQueryKey, characterQueryKeys } from '../model/queryKeys';
 import type { Character } from '../model/types';
 
-export class CharactersListViewModel {
-  private readonly listQuery;
+type CharactersListQuery = Query<
+  Character[],
+  Error,
+  Character[],
+  Character[],
+  CharactersListQueryKey
+>;
 
-  constructor(queryClient: QueryClient) {
-    this.listQuery = new Query({
+export class CharactersListViewModel extends ViewModelBase {
+  private listQuery!: CharactersListQuery;
+  private readonly queryKey: CharactersListQueryKey = characterQueryKeys.list();
+
+  protected willMount() {
+    this.listQuery = new Query<
+      Character[],
+      Error,
+      Character[],
+      Character[],
+      CharactersListQueryKey
+    >({
       queryClient,
-      queryKey: characterQueryKeys.list(),
-      queryFn: () => fetchCharacters(),
+      queryKey: this.queryKey,
+      queryFn: ({ signal }) => fetchCharacters({ signal }),
     });
+  }
+
+  protected willUnmount() {
+    this.listQuery.destroy();
   }
 
   get characters(): Character[] {

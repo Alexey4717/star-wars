@@ -1,34 +1,24 @@
 import { observer } from 'mobx-react-lite';
+import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
-import { queryClient } from '@/common/query/queryClient';
 import { Page } from '@/common/ui/Page/Page';
 
-import {
-  CharactersListView,
-  CharactersListVmProvider,
-  useCharactersListVm,
-} from '@/modules/characters';
+import { CharactersListView, CharactersListViewModel } from '@/modules/characters';
 
-const CharactersPageContent = observer(() => {
-  const viewModel = useCharactersListVm();
-
-  if (viewModel.isLoading) {
+const CharactersPageView = observer(({ model }: ViewModelProps<CharactersListViewModel>) => {
+  if (model.isLoading) {
     return <Page title="Персонажи">Загрузка...</Page>;
   }
 
-  if (viewModel.error) {
-    throw viewModel.error;
+  if (model.error) {
+    throw model.error;
   }
 
   return (
     <Page title="Персонажи">
-      <CharactersListView characters={viewModel.characters} />
+      <CharactersListView characters={model.characters} />
     </Page>
   );
 });
 
-export const CharactersPage = () => (
-  <CharactersListVmProvider queryClient={queryClient}>
-    <CharactersPageContent />
-  </CharactersListVmProvider>
-);
+export const CharactersPage = withViewModel(CharactersListViewModel, CharactersPageView);

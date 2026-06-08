@@ -13,6 +13,8 @@
         "mobx": "^6.16.0",
         "mobx-react-lite": "^4.1.1",
         "mobx-tanstack-query": "^7.2.0",
+        "mobx-view-model": "^10.2.1",
+        "mobx-view-model-react": "^10.2.1",
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
       },
@@ -871,6 +873,10 @@
     "mobx-react-lite": ["mobx-react-lite@4.1.1", "https://registry.npmmirror.com/mobx-react-lite/-/mobx-react-lite-4.1.1.tgz", { "dependencies": { "use-sync-external-store": "^1.4.0" }, "peerDependencies": { "mobx": "^6.9.0", "react": "^16.8.0 || ^17 || ^18 || ^19", "react-dom": "*", "react-native": "*" }, "optionalPeers": ["react-dom", "react-native"] }, "sha512-iUxiMpsvNraCKXU+yPotsOncNNmyeS2B5DKL+TL6Tar/xm+wwNJAubJmtRSeAoYawdZqwv8Z/+5nPRHeQxTiXg=="],
 
     "mobx-tanstack-query": ["mobx-tanstack-query@7.2.0", "https://registry.npmmirror.com/mobx-tanstack-query/-/mobx-tanstack-query-7.2.0.tgz", { "dependencies": { "linked-abort-controller": "^1.1.1", "yummies": "^7.19.4" }, "peerDependencies": { "@tanstack/query-core": "^5.90.2", "mobx": "^6.12.4" } }, "sha512-RFIb6e/7ZHxlWSTDuVT1ghSgVEBh2N5H1HF7pIp40UOeIX189aNIpIBmfdpdY2MtpPYS+cEDL+4Nnyb8PIzxOg=="],
+
+    "mobx-view-model": ["mobx-view-model@10.2.1", "https://registry.npmmirror.com/mobx-view-model/-/mobx-view-model-10.2.1.tgz", { "dependencies": { "mobx-view-model-react": "^10.2.1", "yummies": "^7.10.0" }, "peerDependencies": { "mobx": "^6.12.4", "react": "^18.0.0 || ^19.0.0" }, "optionalPeers": ["react"] }, "sha512-tcITwf3+KR9HAcOZLrv0Gv6n1p81GmVtsJapMWZXxLpezUHAOwHxpO/pBG8M7WhXwSZlHoLw8pns0YAn/dcxGg=="],
+
+    "mobx-view-model-react": ["mobx-view-model-react@10.2.1", "https://registry.npmmirror.com/mobx-view-model-react/-/mobx-view-model-react-10.2.1.tgz", { "dependencies": { "mobx-view-model": "^10.2.1" }, "peerDependencies": { "mobx": "^6.12.4", "mobx-react-lite": "^4.0.7", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "sha512-11vq5bYYN4kui3+IkQc9z03Cb89Ir636/Z8ijGXD2dMDQq5ZM3o1QNTjZiDrJpt/w8W1VKSz1YdH+mqhWVusiw=="],
 
     "ms": ["ms@2.1.3", "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
