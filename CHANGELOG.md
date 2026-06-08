@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Alexey4717/star-wars/compare/v1.0.0...v1.1.0) (2026-06-08)
+
+
+### Features
+
+* add rest modules, first fill character details page ([79692eb](https://github.com/Alexey4717/star-wars/commit/79692eb7b40b2efa3008afd4b1cade7fa9dad2a1))
+
 # 1.0.0 (2026-06-06)
 
 
