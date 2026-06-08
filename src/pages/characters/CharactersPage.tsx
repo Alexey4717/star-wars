@@ -3,7 +3,7 @@ import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
 import { Page } from '@/common/ui/Page/Page';
 
-import { CharactersListView, CharactersListViewModel } from '@/modules/characters';
+import { CharactersListView, CharactersListViewModel } from '@/modules/character/list';
 
 const CharactersPageView = observer(({ model }: ViewModelProps<CharactersListViewModel>) => {
   if (model.isLoading) {

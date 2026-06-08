@@ -1,4 +1,4 @@
-import type { Character } from '../model/types';
+import type { Character } from '../common/types';
 
 interface CharactersListViewProps {
   characters: Character[];

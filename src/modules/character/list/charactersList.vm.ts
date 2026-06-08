@@ -3,9 +3,9 @@ import { ViewModelBase } from 'mobx-view-model';
 
 import { queryClient } from '@/common/query/queryClient';
 
-import { fetchCharacters } from '../model/characters.api';
-import { type CharactersListQueryKey, characterQueryKeys } from '../model/queryKeys';
-import type { Character } from '../model/types';
+import { fetchCharacters } from '../common/character.api';
+import { type CharactersListQueryKey, characterQueryKeys } from '../common/queryKeys';
+import type { Character } from '../common/types';
 
 type CharactersListQuery = Query<
   Character[],

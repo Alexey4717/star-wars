@@ -3,7 +3,7 @@ import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
 import { Page } from '@/common/ui/Page/Page';
 
-import { CharacterDetailView, CharacterDetailViewModel } from '@/modules/characters';
+import { CharacterDetailView, CharacterDetailViewModel } from '@/modules/character/detail';
 
 interface CharacterDetailPageProps {
   characterId: string;
@@ -12,8 +12,17 @@ interface CharacterDetailPageProps {
 const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDetailViewModel>) => {
   const characterId = String(model.payload.characterId);
 
-  if (model.isLoading) {
-    return <Page title={`Персонаж ${characterId}`}>Загрузка...</Page>;
+  const breadcrumbs = [
+    { title: 'Персонажи', to: '/characters' },
+    {
+      title: model.isCharacterLoading
+        ? `Персонаж ${characterId}`
+        : (model.character?.name ?? `Персонаж ${characterId}`),
+    },
+  ];
+
+  if (model.isCharacterLoading) {
+    return <Page breadcrumbs={breadcrumbs}>Загрузка...</Page>;
   }
 
   if (model.error) {
@@ -21,12 +30,16 @@ const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDet
   }
 
   if (!model.character) {
-    return <Page title={`Персонаж ${characterId}`}>Нет данных</Page>;
+    return <Page breadcrumbs={breadcrumbs}>Нет данных</Page>;
   }
 
   return (
-    <Page title={`Персонаж ${characterId}`}>
-      <CharacterDetailView character={model.character} />
+    <Page breadcrumbs={breadcrumbs}>
+      <CharacterDetailView
+        character={model.character}
+        isRelatedLoading={model.isRelatedLoading}
+        metaLine={model.metaLine}
+      />
     </Page>
   );
 });

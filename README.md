@@ -128,48 +128,57 @@ src/
 
 ### MVVM внутри модуля
 
-Структура модуля `modules/characters/`:
+Модули именуются в **единственном числе** (`character`, `planet`, `species`). Внутри — фрактальные подмодули: `common/` (доменная сущность) и сценарии (`list/`, `detail/`).
+
+Структура модуля `modules/character/`:
 
 ```
-modules/characters/
-├── index.ts                              # публичный API модуля
-├── model/
-│   ├── types.ts                          # типы домена
-│   ├── queryKeys.ts                      # ключи TanStack Query
-│   └── characters.api.ts                 # запросы к серверу
-├── view-model/
-│   ├── charactersList.vm.ts              # MobX + Query: список
-│   ├── characterDetail.vm.ts             # MobX + Query: детальная
-│   ├── charactersListVm.context.tsx      # Provider + hook
-│   └── characterDetailVm.context.tsx     # Provider + hook
-└── view/
-    ├── CharactersListView.tsx            # только props + UI
-    └── CharacterDetailView.tsx
+modules/character/
+├── common/                   # аналог FSD entities внутри домена
+│   ├── types.ts
+│   ├── character.api.ts
+│   ├── queryKeys.ts
+│   └── index.ts              # публичный API подмодуля
+├── list/
+│   ├── charactersList.vm.ts
+│   ├── CharactersListView.tsx
+│   └── index.ts
+└── detail/
+    ├── characterDetail.vm.ts
+    ├── CharacterDetailView.tsx
+    └── index.ts
 ```
 
-- **Model** — чистые данные и сетевой слой, без React.
-- **ViewModel** — MobX-класс с `Query` из mobx-tanstack-query: загрузка, кеш, ошибки.
+Корневой `index.ts` в модуле **не используется** — публичный API только у подмодулей (`common/`, `list/`, `detail/`).
+
+Связанные сущности — отдельные модули с тем же паттерном `common/`:
+
+```
+modules/planet/common/   # fetchPlanetById, Planet, queryKeys
+modules/species/common/  # fetchSpeciesById, Species, queryKeys
+```
+
+- **common/** — типы, API, query keys, форматтеры; без React.
+- **ViewModel** — MobX-класс с `Query` из mobx-tanstack-query; detail VM оркестрирует dependent queries (planet, species).
 - **View** — React-компоненты без бизнес-логики; получают данные через props.
-- **Page** — shell (`Page`), `VmProvider`, `observer`; при необходимости передаёт `queryClient` из common.
+- **Page** — shell (`Page`), `withViewModel`, `observer`; динамические breadcrumbs через prop `breadcrumbs`.
 
-Связь View ↔ ViewModel — через React Context модуля; View не ходит в API напрямую.
-
-### Data flow (characters)
+### Data flow (character detail)
 
 ```
-Route (app) → Page (pages) → VmProvider (modules) → ViewModel + Query → swapiFetch (common) → swapi.online
-                                      ↓
+Route (app) → Page (pages) → withViewModel (detail VM) → Query → swapiFetch (common) → swapi.online
+                                    ↓                           ↓
+                              breadcrumbs                  planet/species modules
+                                    ↓
                               View (props only)
 ```
 
-Пример публичного API модуля:
+Пример импортов:
 
 ```ts
-import {
-  CharactersListView,
-  CharactersListVmProvider,
-  useCharactersListVm,
-} from '@/modules/characters';
+import { CharactersListView, CharactersListViewModel } from '@/modules/character/list';
+import { CharacterDetailView, CharacterDetailViewModel } from '@/modules/character/detail';
+import { fetchPlanetById, planetQueryKeys } from '@/modules/planet/common';
 ```
 
 `@tanstack/react-query` и хуки `useQuery` **не используются** — запросы идут из ViewModel через [mobx-tanstack-query](https://github.com/js2me/mobx-tanstack-query).
@@ -199,7 +208,7 @@ HTTP-клиент: `src/common/api/swapiFetch.ts`.
 
 ```ts
 import { Button } from '@/common/ui/Button';
-import { CharactersList } from '@/modules/characters';
+import { CharactersListView } from '@/modules/character/list';
 import { HomePage } from '@/pages/home';
 ```
 
@@ -364,9 +373,9 @@ export const NAV_ITEMS = [
 Реализован каркас приложения:
 
 - **App** — layout (desktop/mobile), sidebar, theme toggle, TanStack Router, провайдеры, MobX config, `QueryClient`
-- **Pages** — заглушки для SWAPI-сущностей; **characters** и **characterDetails** загружают данные через MVVM
-- **Modules** — `characters` (Model + ViewModel + View)
-- **Common** — `Page`, `RoutePending`, `ErrorBoundary`, `swapiFetch`
+- **Pages** — заглушки для SWAPI-сущностей; **characters** и **characterDetails** загружают данные через MVVM; detail — динамические breadcrumbs
+- **Modules** — `character` (common + list + detail), заготовки `planet` и `species` (common + API)
+- **Common** — `Page` (breadcrumbs), `RoutePending`, `ErrorBoundary`, `swapiFetch`
 - **Global** — augmentation типов для Ant Design и TanStack Router
 
 Остальные сущности SWAPI (films, planets, …) — следующий этап.
