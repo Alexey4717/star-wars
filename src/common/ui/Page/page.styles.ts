@@ -5,6 +5,12 @@ export const usePageStyles = createStyles(({ token }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: token.marginLG,
+    width: '100%',
+    maxWidth: '100%',
+    [`@media (min-width: ${token.screenXL}px)`]: {
+      maxWidth: 900,
+      marginInline: 'auto',
+    },
   },
   header: {
     margin: 0,
