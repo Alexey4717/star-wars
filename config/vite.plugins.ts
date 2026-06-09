@@ -4,6 +4,8 @@ import type { PluginOption } from 'vite';
 import checker from 'vite-plugin-checker';
 import svgr from 'vite-plugin-svgr';
 
+import { generateRoutesPlugin } from './generateRoutesPlugin';
+
 export function plugins(isBuild: boolean): PluginOption[] {
   const pluginList: (PluginOption | false | null | undefined)[] = [
     tanstackRouter({
@@ -13,6 +15,7 @@ export function plugins(isBuild: boolean): PluginOption[] {
       generatedRouteTree: './src/app/router/routeTree.gen.ts',
       routeFileIgnorePrefix: '-',
     }),
+    generateRoutesPlugin(),
     react(),
     svgr(),
     !isBuild &&

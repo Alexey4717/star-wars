@@ -1,13 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
+import { NAV_ENTRIES } from '@/common/navigation/navConfig';
 import { Page } from '@/common/ui/Page/Page';
 
 import { CharactersListView, CharactersListViewModel } from '@/modules/character/list';
 
 const CharactersPageView = observer(({ model }: ViewModelProps<CharactersListViewModel>) => {
   if (model.isLoading) {
-    return <Page title="Персонажи">Загрузка...</Page>;
+    return <Page title={NAV_ENTRIES.characters.label}>Загрузка...</Page>;
   }
 
   if (model.error) {
@@ -15,7 +16,7 @@ const CharactersPageView = observer(({ model }: ViewModelProps<CharactersListVie
   }
 
   return (
-    <Page title="Персонажи">
+    <Page title={NAV_ENTRIES.characters.label}>
       <CharactersListView characters={model.characters} />
     </Page>
   );

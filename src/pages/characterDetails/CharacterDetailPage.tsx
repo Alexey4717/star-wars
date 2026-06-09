@@ -1,9 +1,15 @@
+import { useMemo } from 'react';
+
 import { observer } from 'mobx-react-lite';
 import { type ViewModelProps, withViewModel } from 'mobx-view-model-react';
 
+import { NAV_ENTRIES } from '@/common/navigation/navConfig';
 import { Page } from '@/common/ui/Page/Page';
+import { PageEmptyState } from '@/common/ui/Page/PageEmptyState';
 
 import { CharacterDetailView, CharacterDetailViewModel } from '@/modules/character/detail';
+
+import { CharacterDetailPageSkeleton } from './CharacterDetailPageSkeleton';
 
 interface CharacterDetailPageProps {
   characterId: string;
@@ -12,17 +18,18 @@ interface CharacterDetailPageProps {
 const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDetailViewModel>) => {
   const characterId = String(model.payload.characterId);
 
-  const breadcrumbs = [
-    { title: 'Персонажи', to: '/characters' },
-    {
-      title: model.isCharacterLoading
-        ? `Персонаж ${characterId}`
-        : (model.character?.name ?? `Персонаж ${characterId}`),
-    },
-  ];
+  const breadcrumbs = useMemo(
+    () => [
+      { title: NAV_ENTRIES.characters.label, to: NAV_ENTRIES.characters.to },
+      {
+        title: model.character?.name ?? `Персонаж ${characterId}`,
+      },
+    ],
+    [characterId, model.character?.name],
+  );
 
   if (model.isCharacterLoading) {
-    return <Page breadcrumbs={breadcrumbs}>Загрузка...</Page>;
+    return <CharacterDetailPageSkeleton />;
   }
 
   if (model.characterError) {
@@ -30,7 +37,7 @@ const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDet
   }
 
   if (!model.character) {
-    return <Page breadcrumbs={breadcrumbs}>Нет данных</Page>;
+    return <PageEmptyState entity="персонаж" />;
   }
 
   return (

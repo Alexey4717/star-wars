@@ -10,6 +10,8 @@ import {
   VideoCameraOutlined,
 } from '@ant-design/icons';
 
+import { NAV_ENTRIES, type NavListRouteTo } from '@/common/navigation/navConfig';
+
 import { Route as CharactersRoute } from './routes/_layout/characters/index';
 import { Route as FilmsRoute } from './routes/_layout/films/index';
 import { Route as HomeRoute } from './routes/_layout/index';
@@ -18,14 +20,8 @@ import { Route as SpeciesRoute } from './routes/_layout/species/index';
 import { Route as StarshipsRoute } from './routes/_layout/starships/index';
 import { Route as TransportsRoute } from './routes/_layout/transports/index';
 import { Route as VehiclesRoute } from './routes/_layout/vehicles/index';
-import type { FileRouteTypes } from './routeTree.gen';
 
 export { HomeRoute };
-
-type NavListRouteTo = Extract<
-  FileRouteTypes['to'],
-  '/characters' | '/films' | '/planets' | '/species' | '/starships' | '/transports' | '/vehicles'
->;
 
 interface NavItem<TRoute extends { readonly to: NavListRouteTo }> {
   route: TRoute;
@@ -36,37 +32,37 @@ interface NavItem<TRoute extends { readonly to: NavListRouteTo }> {
 export const NAV_ITEMS = [
   {
     route: CharactersRoute,
-    label: 'Персонажи',
+    label: NAV_ENTRIES.characters.label,
     icon: <TeamOutlined />,
   },
   {
     route: FilmsRoute,
-    label: 'Фильмы',
+    label: NAV_ENTRIES.films.label,
     icon: <VideoCameraOutlined />,
   },
   {
     route: PlanetsRoute,
-    label: 'Планеты',
+    label: NAV_ENTRIES.planets.label,
     icon: <GlobalOutlined />,
   },
   {
     route: SpeciesRoute,
-    label: 'Виды',
+    label: NAV_ENTRIES.species.label,
     icon: <BugOutlined />,
   },
   {
     route: StarshipsRoute,
-    label: 'Звездолёты',
+    label: NAV_ENTRIES.starships.label,
     icon: <RocketOutlined />,
   },
   {
     route: TransportsRoute,
-    label: 'Транспорт',
+    label: NAV_ENTRIES.transports.label,
     icon: <TruckOutlined />,
   },
   {
     route: VehiclesRoute,
-    label: 'Транспортные средства',
+    label: NAV_ENTRIES.vehicles.label,
     icon: <CarOutlined />,
   },
 ] as const satisfies readonly NavItem<{ readonly to: NavListRouteTo }>[];
