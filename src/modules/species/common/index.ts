@@ -4,4 +4,4 @@ export {
   speciesQueryKeys,
 } from './queryKeys';
 export { fetchSpecies, fetchSpeciesById } from './species.api';
-export type { Species, SpeciesId } from './types';
+export type { Species, SpeciesDetailQuery, SpeciesId } from './types';

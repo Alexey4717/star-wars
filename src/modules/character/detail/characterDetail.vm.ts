@@ -6,23 +6,19 @@ import { queryClient } from '@/common/query/queryClient';
 import {
   fetchPlanetById,
   type Planet,
-  type PlanetDetailQueryKey,
+  type PlanetDetailQuery,
   planetQueryKeys,
 } from '@/modules/planet/common';
 import {
   fetchSpeciesById,
   type Species,
-  type SpeciesDetailQueryKey,
+  type SpeciesDetailQuery,
   speciesQueryKeys,
 } from '@/modules/species/common';
 
-import { fetchCharacterById } from '../common/character.api';
-import { type CharacterDetailQueryKey, characterQueryKeys } from '../common/queryKeys';
+import { type CharacterDetailQuery, characterQueryKeys, fetchCharacterById } from '../common';
 import type { Character } from '../common/types';
-
-type CharacterDetailQuery = Query<Character, Error, Character, Character, CharacterDetailQueryKey>;
-type PlanetDetailQuery = Query<Planet, Error, Planet, Planet, PlanetDetailQueryKey>;
-type SpeciesDetailQuery = Query<Species, Error, Species, Species, SpeciesDetailQueryKey>;
+import { selectCharacterMetaLine } from './characterDetail.selectors';
 
 export class CharacterDetailViewModel extends ViewModelBase<{ characterId: number }> {
   private characterQuery!: CharacterDetailQuery;
@@ -30,7 +26,7 @@ export class CharacterDetailViewModel extends ViewModelBase<{ characterId: numbe
   private speciesQuery: SpeciesDetailQuery | null = null;
 
   protected willMount() {
-    this.createCharacterQuery(this.payload.characterId);
+    this.initCharacterQuery(this.payload.characterId);
   }
 
   protected willUnmount() {
@@ -45,42 +41,36 @@ export class CharacterDetailViewModel extends ViewModelBase<{ characterId: numbe
 
     this.destroyRelatedQueries();
     this.characterQuery.destroy();
-    this.createCharacterQuery(payload.characterId);
+    this.initCharacterQuery(payload.characterId);
   }
 
-  private createCharacterQuery(characterId: number) {
-    this.characterQuery = new Query<
-      Character,
-      Error,
-      Character,
-      Character,
-      CharacterDetailQueryKey
-    >({
+  private initCharacterQuery(characterId: number) {
+    this.characterQuery = new Query({
       queryClient,
       queryKey: characterQueryKeys.detail(characterId),
       queryFn: ({ signal }) => fetchCharacterById(characterId, { signal }),
     });
 
     this.characterQuery.onDone((character) => {
-      this.setupRelatedQueries(character);
+      this.initRelatedQueries(character);
     });
 
     if (this.characterQuery.data) {
-      this.setupRelatedQueries(this.characterQuery.data);
+      this.initRelatedQueries(this.characterQuery.data);
     }
   }
 
-  private setupRelatedQueries(character: Character) {
+  private initRelatedQueries(character: Character) {
     this.destroyRelatedQueries();
 
-    this.planetQuery = new Query<Planet, Error, Planet, Planet, PlanetDetailQueryKey>({
+    this.planetQuery = new Query({
       queryClient,
       queryKey: planetQueryKeys.detail(character.homeworld),
       queryFn: ({ signal }) => fetchPlanetById(character.homeworld, { signal }),
     });
 
     if (character.species_id) {
-      this.speciesQuery = new Query<Species, Error, Species, Species, SpeciesDetailQueryKey>({
+      this.speciesQuery = new Query({
         queryClient,
         queryKey: speciesQueryKeys.detail(character.species_id),
         queryFn: ({ signal }) => fetchSpeciesById(character.species_id as number, { signal }),
@@ -99,61 +89,46 @@ export class CharacterDetailViewModel extends ViewModelBase<{ characterId: numbe
     return this.characterQuery.data;
   }
 
-  get speciesName(): string | undefined {
-    return this.speciesQuery?.data?.name;
-  }
-
-  get homeworldName(): string | undefined {
-    return this.planetQuery?.data?.name;
-  }
-
-  get metaLine(): string {
-    const parts = ['Персонаж'];
-
-    if (this.speciesName) {
-      parts.push(this.speciesName);
-    }
-
-    if (this.homeworldName) {
-      parts.push(this.homeworldName);
-    }
-
-    return parts.join(' · ');
-  }
-
   get isCharacterLoading(): boolean {
     return this.characterQuery.isLoading;
   }
 
-  get isCharacterReady(): boolean {
-    return !!this.characterQuery.data && !this.characterQuery.isLoading;
+  get characterError(): Error | null {
+    return this.characterQuery.error;
   }
 
-  get isRelatedLoading(): boolean {
-    if (!this.isCharacterReady) {
+  get planet(): Planet | undefined {
+    return this.planetQuery?.data;
+  }
+
+  get isPlanetLoading(): boolean {
+    return this.planetQuery?.isLoading ?? false;
+  }
+
+  get planetError(): Error | null {
+    return this.planetQuery?.error ?? null;
+  }
+
+  get species(): Species | undefined {
+    return this.speciesQuery?.data;
+  }
+
+  get isSpeciesLoading(): boolean {
+    if (!this.character?.species_id) {
       return false;
     }
 
-    if (this.planetQuery?.isLoading) {
-      return true;
-    }
-
-    if (this.character?.species_id && this.speciesQuery?.isLoading) {
-      return true;
-    }
-
-    return false;
+    return this.speciesQuery?.isLoading ?? false;
   }
 
-  get isLoading(): boolean {
-    if (this.characterQuery.isLoading) {
-      return true;
-    }
-
-    return this.isRelatedLoading;
+  get speciesError(): Error | null {
+    return this.speciesQuery?.error ?? null;
   }
 
-  get error(): Error | null {
-    return this.characterQuery.error;
+  get metaLine(): string {
+    return selectCharacterMetaLine({
+      species: this.species,
+      planet: this.planet,
+    });
   }
 }

@@ -25,8 +25,8 @@ const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDet
     return <Page breadcrumbs={breadcrumbs}>Загрузка...</Page>;
   }
 
-  if (model.error) {
-    throw model.error;
+  if (model.characterError) {
+    throw model.characterError;
   }
 
   if (!model.character) {
@@ -35,11 +35,7 @@ const CharacterDetailPageView = observer(({ model }: ViewModelProps<CharacterDet
 
   return (
     <Page breadcrumbs={breadcrumbs}>
-      <CharacterDetailView
-        character={model.character}
-        isRelatedLoading={model.isRelatedLoading}
-        metaLine={model.metaLine}
-      />
+      <CharacterDetailView character={model.character} metaLine={model.metaLine} />
     </Page>
   );
 });

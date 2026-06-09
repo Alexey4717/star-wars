@@ -1,4 +1,4 @@
-import { Avatar, Card, Col, Row, Skeleton, Tag, Typography } from 'antd';
+import { Avatar, Card, Col, Row, Tag, Typography } from 'antd';
 
 import type { Character } from '../common/types';
 import { useCharacterDetailStyles } from './characterDetail.styles';
@@ -6,7 +6,6 @@ import { useCharacterDetailStyles } from './characterDetail.styles';
 interface CharacterDetailViewProps {
   character: Character;
   metaLine: string;
-  isRelatedLoading?: boolean;
 }
 
 const STAT_ITEMS = [
@@ -27,11 +26,7 @@ const PLACEHOLDER_SECTIONS = [
   { key: 'starships', title: 'Звездолёты' },
 ] as const;
 
-export const CharacterDetailView = ({
-  character,
-  metaLine,
-  isRelatedLoading = false,
-}: CharacterDetailViewProps) => {
+export const CharacterDetailView = ({ character, metaLine }: CharacterDetailViewProps) => {
   const { styles } = useCharacterDetailStyles();
 
   return (
@@ -46,13 +41,9 @@ export const CharacterDetailView = ({
             {character.name}
           </Typography.Title>
 
-          {isRelatedLoading ? (
-            <Skeleton.Input active size="small" style={{ width: 240 }} />
-          ) : (
-            <Typography.Text className={styles.meta} type="secondary">
-              {metaLine}
-            </Typography.Text>
-          )}
+          <Typography.Text className={styles.meta} type="secondary">
+            {metaLine}
+          </Typography.Text>
         </div>
       </div>
 

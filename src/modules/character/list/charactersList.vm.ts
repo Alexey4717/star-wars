@@ -3,30 +3,20 @@ import { ViewModelBase } from 'mobx-view-model';
 
 import { queryClient } from '@/common/query/queryClient';
 
-import { fetchCharacters } from '../common/character.api';
-import { type CharactersListQueryKey, characterQueryKeys } from '../common/queryKeys';
-import type { Character } from '../common/types';
-
-type CharactersListQuery = Query<
-  Character[],
-  Error,
-  Character[],
-  Character[],
-  CharactersListQueryKey
->;
+import {
+  type Character,
+  type CharactersListQuery,
+  type CharactersListQueryKey,
+  characterQueryKeys,
+  fetchCharacters,
+} from '../common';
 
 export class CharactersListViewModel extends ViewModelBase {
   private listQuery!: CharactersListQuery;
   private readonly queryKey: CharactersListQueryKey = characterQueryKeys.list();
 
   protected willMount() {
-    this.listQuery = new Query<
-      Character[],
-      Error,
-      Character[],
-      Character[],
-      CharactersListQueryKey
-    >({
+    this.listQuery = new Query({
       queryClient,
       queryKey: this.queryKey,
       queryFn: ({ signal }) => fetchCharacters({ signal }),

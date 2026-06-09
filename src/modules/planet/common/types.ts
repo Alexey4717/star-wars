@@ -1,3 +1,7 @@
+import type { Query } from 'mobx-tanstack-query';
+
+import type { PlanetDetailQueryKey } from './queryKeys';
+
 export interface Planet {
   id: number;
   name: string;
@@ -12,3 +16,5 @@ export interface Planet {
 }
 
 export type PlanetId = Planet['id'];
+
+export type PlanetDetailQuery = Query<Planet, Error, Planet, Planet, PlanetDetailQueryKey>;

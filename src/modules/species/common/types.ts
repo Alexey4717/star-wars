@@ -1,3 +1,7 @@
+import type { Query } from 'mobx-tanstack-query';
+
+import type { SpeciesDetailQueryKey } from './queryKeys';
+
 export interface Species {
   id: number;
   name: string;
@@ -13,3 +17,5 @@ export interface Species {
 }
 
 export type SpeciesId = Species['id'];
+
+export type SpeciesDetailQuery = Query<Species, Error, Species, Species, SpeciesDetailQueryKey>;

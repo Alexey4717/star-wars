@@ -4,4 +4,9 @@ export {
   type CharactersListQueryKey,
   characterQueryKeys,
 } from './queryKeys';
-export type { Character, CharacterId } from './types';
+export type {
+  Character,
+  CharacterDetailQuery,
+  CharacterId,
+  CharactersListQuery,
+} from './types';

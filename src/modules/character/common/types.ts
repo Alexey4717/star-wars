@@ -1,3 +1,7 @@
+import type { Query } from 'mobx-tanstack-query';
+
+import type { CharacterDetailQueryKey, CharactersListQueryKey } from './queryKeys';
+
 export interface Character {
   id: number;
   name: string;
@@ -13,3 +17,19 @@ export interface Character {
 }
 
 export type CharacterId = Character['id'];
+
+export type CharacterDetailQuery = Query<
+  Character,
+  Error,
+  Character,
+  Character,
+  CharacterDetailQueryKey
+>;
+
+export type CharactersListQuery = Query<
+  Character[],
+  Error,
+  Character[],
+  Character[],
+  CharactersListQueryKey
+>;
