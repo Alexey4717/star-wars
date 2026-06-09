@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/Alexey4717/star-wars/compare/v1.1.0...v1.2.0) (2026-06-09)
+
+
+### Bug Fixes
+
+* page with for xl breakpoint ([b1a68e7](https://github.com/Alexey4717/star-wars/commit/b1a68e7b263a0cf93157bddba9f0c377b160ca13))
+
+
+### Features
+
+* add common empty state page, character details skeleton page, update routing config ([22c1379](https://github.com/Alexey4717/star-wars/commit/22c137960d5fcaca4e3da833368cd88684ab21de))
+
 # [1.1.0](https://github.com/Alexey4717/star-wars/compare/v1.0.0...v1.1.0) (2026-06-08)
 
 
